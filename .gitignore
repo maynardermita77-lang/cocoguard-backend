@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environments
+.venv/
+venv/
+venv311/
+ENV/
+
+# Environment variables
+.env
+
+# Database files
+*.db
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# Uploads (user-generated content)
+uploads/
+
+# Firebase service account (sensitive)
+firebase-service-account.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test files
+test_static/
+
+# Build
+*.egg-info/
+dist/
+build/
