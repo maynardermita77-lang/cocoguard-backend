@@ -15,3 +15,17 @@ services:
         value: ./uploads
       - key: PYTHON_VERSION
         value: 3.11.0
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USERNAME
+        value: erwincmartinez.cgc@gmail.com
+      - key: SMTP_PASSWORD
+        value: loqb qxbh kfki efwd
+      - key: SMTP_FROM_EMAIL
+        value: erwincmartinez.cgc@gmail.com
+      - key: SMTP_FROM_NAME
+        value: CocoGuard
+      - key: ALLOWED_ORIGINS_RAW
+        value: "*"

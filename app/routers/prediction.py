@@ -133,7 +133,7 @@ async def predict_pest(
     # This avoids picking a noise-floor class at 50% that might be sorted first.
     best_prediction = None
     for pred in result["predictions"]:
-        if pred["confidence"] >= 50.0:
+        if pred["confidence"] >= 45.0:
             best_prediction = pred
             break
     # Fallback to first prediction if none meets 50% (will be marked OUT_OF_SCOPE)
@@ -161,8 +161,8 @@ async def predict_pest(
     #   ⚠️ UNCERTAIN   : confidence 45–60% → possible pest, retake recommended
     #   ❓ OUT_OF_SCOPE: confidence < 45%  → no recognizable pest / unknown image
     
-    DETECTED_THRESHOLD  = 50.0   # ≥ 50 %  → DETECTED
-    UNCERTAIN_THRESHOLD = 35.0   # 35–50 % → UNCERTAIN
+    DETECTED_THRESHOLD  = 45.0   # ≥ 45 %  → DETECTED
+    UNCERTAIN_THRESHOLD = 25.0   # 25–45 % → UNCERTAIN
     
     VALID_COCONUT_PESTS = [
         'APW Adult', 'APW Larvae', 'Brontispa', 'Brontispa Pupa',
