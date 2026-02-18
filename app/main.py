@@ -99,14 +99,9 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         print(f"[WARNING] Database seeding error: {e}")
     
-    # Pre-load prediction model
-    try:
-        from .services.prediction_service import get_prediction_service
-        service = get_prediction_service()
-        print(f"[INFO] Prediction model loaded: {service.model_loaded}")
-        print(f"[INFO] Available pest classes: {service.labels}")
-    except Exception as e:
-        print(f"[WARNING] Failed to pre-load prediction model: {e}")
+    # Skip pre-loading TensorFlow model at startup (too slow for free tier)
+    # Model will be lazy-loaded on first prediction request instead
+    print("[INFO] Prediction model will be loaded on first request (lazy loading)")
     
     yield
     # Shutdown: cleanup if needed
