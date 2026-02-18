@@ -19,6 +19,72 @@ async def lifespan(app: FastAPI):
     # Create uploads directory
     os.makedirs(settings.upload_dir, exist_ok=True)
     
+    # Seed database with default admin account if empty
+    try:
+        from .database import SessionLocal
+        from .models import User, UserRole, UserStatus, PestType, PestRiskLevel
+        from .auth_utils import get_password_hash
+        db = SessionLocal()
+        
+        # Seed admin accounts
+        user_count = db.query(User).count()
+        if user_count == 0:
+            print("[INFO] Empty database detected — seeding default admin accounts...")
+            admins = [
+                {
+                    "username": "Admin",
+                    "email": "admin@cocoguard.com",
+                    "password": "cocoguard",
+                    "full_name": "Administrator",
+                    "role": UserRole.admin,
+                },
+                {
+                    "username": "maynardermita",
+                    "email": "maynardermita@gmail.com",
+                    "password": "cocoguard",
+                    "full_name": "Maynard Ermita",
+                    "role": UserRole.admin,
+                },
+            ]
+            for acct in admins:
+                new_user = User(
+                    username=acct["username"],
+                    email=acct["email"],
+                    password_hash=get_password_hash(acct["password"]),
+                    role=acct["role"],
+                    status=UserStatus.active,
+                    full_name=acct["full_name"],
+                )
+                db.add(new_user)
+            db.commit()
+            print(f"[INFO] Seeded {len(admins)} default admin accounts")
+        else:
+            print(f"[INFO] Database has {user_count} users, skipping user seed")
+        
+        # Seed pest types
+        pest_count = db.query(PestType).count()
+        if pest_count == 0:
+            print("[INFO] No pest types found — seeding default pest types...")
+            default_pests = [
+                {"name": "APW Adult", "scientific_name": "Rhynchophorus ferrugineus", "risk_level": PestRiskLevel.critical},
+                {"name": "APW Larvae", "scientific_name": "Rhynchophorus ferrugineus", "risk_level": PestRiskLevel.critical},
+                {"name": "Brontispa", "scientific_name": "Brontispa longissima", "risk_level": PestRiskLevel.high},
+                {"name": "Brontispa Pupa", "scientific_name": "Brontispa longissima", "risk_level": PestRiskLevel.medium},
+                {"name": "Rhinoceros Beetle", "scientific_name": "Oryctes rhinoceros", "risk_level": PestRiskLevel.critical},
+                {"name": "Slug Caterpillar", "scientific_name": "Parasa lepida", "risk_level": PestRiskLevel.medium},
+                {"name": "White Grub", "scientific_name": "Leucopholis irrorata", "risk_level": PestRiskLevel.high},
+            ]
+            for pest in default_pests:
+                db.add(PestType(**pest, is_active=True))
+            db.commit()
+            print(f"[INFO] Seeded {len(default_pests)} pest types")
+        else:
+            print(f"[INFO] Database has {pest_count} pest types, skipping pest seed")
+        
+        db.close()
+    except Exception as e:
+        print(f"[WARNING] Database seeding error: {e}")
+    
     # Pre-load prediction model
     try:
         from .services.prediction_service import get_prediction_service
