@@ -48,6 +48,8 @@ allowed_origins = [
     "http://10.0.0.17",
     "http://10.0.0.17:80",
     "http://10.0.0.17:8000",
+    "https://cocoguard-web.pages.dev",
+    "https://cocoguard-backend.onrender.com",
     "*",  # Fallback for development
 ]
 
