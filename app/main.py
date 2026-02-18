@@ -45,6 +45,20 @@ async def lifespan(app: FastAPI):
                     "full_name": "Maynard Ermita",
                     "role": UserRole.admin,
                 },
+                {
+                    "username": "erwincmartinez",
+                    "email": "erwincmartinez.cgc@gmail.com",
+                    "password": "cocoguard",
+                    "full_name": "Erwin Martinez",
+                    "role": UserRole.admin,
+                },
+                {
+                    "username": "maynardermita77",
+                    "email": "maynardermita77@gmail.com",
+                    "password": "cocoguard",
+                    "full_name": "Maynard Ermita",
+                    "role": UserRole.user,
+                },
             ]
             for acct in admins:
                 new_user = User(
