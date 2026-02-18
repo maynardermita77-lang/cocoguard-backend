@@ -21,11 +21,12 @@ class PestPredictionService:
         self.model_loaded = False
         
         # Default paths - can be overridden
+        # From app/services/ go up 2 levels to repo root, then into assets/model/
         self.model_path = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), '../../../assets/model/best_float16.tflite')
+            os.path.join(os.path.dirname(__file__), '../../assets/model/best_float16.tflite')
         )
         self.labels_path = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), '../../../assets/model/labels.txt')
+            os.path.join(os.path.dirname(__file__), '../../assets/model/labels.txt')
         )
         
     def load_model(self) -> bool:

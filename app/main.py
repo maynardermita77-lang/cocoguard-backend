@@ -75,6 +75,80 @@ async def lifespan(app: FastAPI):
         else:
             print(f"[INFO] Database has {user_count} users, skipping user seed")
         
+        # Seed knowledge articles
+        from .models import KnowledgeArticle
+        article_count = db.query(KnowledgeArticle).count()
+        if article_count == 0:
+            print("[INFO] No knowledge articles found — seeding default articles...")
+            default_articles = [
+                {
+                    "title": "Asiatic Palm Weevil (APW)",
+                    "content": "The Asiatic Palm Weevil (Rhynchophorus ferrugineus) is one of the most destructive pests of coconut palms. Adults are large reddish-brown weevils that bore into the crown of palms. Early detection is critical for management.",
+                    "category": "pest-management",
+                    "tags": '["APW", "weevil", "coconut pest"]',
+                    "image_url": "/assets/knowledge/knowledge_20260205_160113_APW_page-0001.jpg",
+                    "author_id": 1,
+                    "views": 0,
+                    "is_published": True,
+                },
+                {
+                    "title": "Asiatic Palm Weevil (APW)",
+                    "content": "APW larvae feed inside the trunk and crown, causing extensive damage. Management includes pheromone traps, removal of infested palms, and biological control agents. Regular monitoring is essential.",
+                    "category": "pest-management",
+                    "tags": '["APW", "weevil", "management"]',
+                    "image_url": "/assets/knowledge/knowledge_20260205_160234_APW_page-0002.jpg",
+                    "author_id": 1,
+                    "views": 0,
+                    "is_published": True,
+                },
+                {
+                    "title": "Rhinoceros Beetle",
+                    "content": "The Rhinoceros Beetle (Oryctes rhinoceros) is a major pest of coconut palms. Adults bore into the crown, damaging young fronds. Damage appears as V-shaped cuts on leaves. Integrated pest management strategies are recommended.",
+                    "category": "management-strategies",
+                    "tags": '["rhinoceros beetle", "coconut pest"]',
+                    "image_url": "/assets/knowledge/knowledge_20260205_163758_Rhino_page-0001.jpg",
+                    "author_id": 1,
+                    "views": 0,
+                    "is_published": True,
+                },
+                {
+                    "title": "Rhinoceros Beetle",
+                    "content": "Management of Rhinoceros Beetle includes use of Metarhizium fungus, pheromone traps, and maintaining clean plantations. Removal of breeding sites such as dead logs and manure heaps reduces populations.",
+                    "category": "best-practices",
+                    "tags": '["rhinoceros beetle", "management", "best practices"]',
+                    "image_url": "/assets/knowledge/knowledge_20260205_163814_Rhino_page-0002.jpg",
+                    "author_id": 1,
+                    "views": 0,
+                    "is_published": True,
+                },
+                {
+                    "title": "Brontispa",
+                    "content": "Brontispa longissima (coconut leaf beetle) attacks young leaves causing characteristic feeding damage. Both adults and larvae feed on unopened fronds, leaving brown streaks and reducing photosynthetic capacity.",
+                    "category": "pest-management",
+                    "tags": '["brontispa", "leaf beetle", "coconut pest"]',
+                    "image_url": "/assets/knowledge/knowledge_20260205_163851_Brontispa_page-0001.jpg",
+                    "author_id": 1,
+                    "views": 0,
+                    "is_published": True,
+                },
+                {
+                    "title": "Brontispa",
+                    "content": "Biological control using parasitoids such as Asecodes hispinarum has proven effective against Brontispa. Chemical control with systemic insecticides may be used for severe infestations. Regular scouting is important.",
+                    "category": "best-practices",
+                    "tags": '["brontispa", "biological control", "best practices"]',
+                    "image_url": "/assets/knowledge/knowledge_20260205_163919_APW_page-0002.jpg",
+                    "author_id": 1,
+                    "views": 0,
+                    "is_published": True,
+                },
+            ]
+            for article_data in default_articles:
+                db.add(KnowledgeArticle(**article_data))
+            db.commit()
+            print(f"[INFO] Seeded {len(default_articles)} knowledge articles")
+        else:
+            print(f"[INFO] Database has {article_count} knowledge articles, skipping")
+
         # Seed pest types
         pest_count = db.query(PestType).count()
         if pest_count == 0:
@@ -235,6 +309,18 @@ if os.path.isdir(uploads_dir):
     )
 else:
     print(f"WARNING: uploads/files directory not found at {uploads_dir}")
+
+# Serve knowledge base images from assets/knowledge directory (bundled with repo)
+knowledge_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../assets/knowledge'))
+print(f"[DEBUG] Absolute knowledge_dir path: {knowledge_dir}")
+os.makedirs(knowledge_dir, exist_ok=True)
+if os.path.isdir(knowledge_dir):
+    print(f"[DEBUG] Serving /assets/knowledge from: {knowledge_dir}")
+    app.mount(
+        "/assets/knowledge",
+        CORSStaticFiles(directory=knowledge_dir),
+        name="knowledge_images"
+    )
 
 # Serve scan images from uploads/scans directory
 scans_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../uploads/scans'))
