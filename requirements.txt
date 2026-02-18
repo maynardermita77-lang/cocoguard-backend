@@ -25,6 +25,9 @@ tensorflow>=2.13.0
 # HTTP client for URL predictions
 httpx>=0.25.0
 
+# Firebase Cloud Messaging (push notifications)
+firebase-admin>=6.2.0
+
 # Google OAuth2 token verification
 google-auth>=2.23.0
 google-auth-httplib2>=0.1.0
