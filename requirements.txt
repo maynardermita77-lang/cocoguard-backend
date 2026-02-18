@@ -9,7 +9,13 @@ pydantic[email]==2.5.0
 pydantic-settings==2.1.0
 python-dotenv==1.0.0
 aiofiles==23.2.1
-email-validator==2.1.0
+email-validator>=2.1.1
+
+# Async email
+aiosmtplib>=2.0.0
+
+# SMS via Twilio
+twilio>=8.0.0
 
 # Image processing and ML
 Pillow>=10.0.1
