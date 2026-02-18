@@ -6,8 +6,8 @@ from jose import jwt, JWTError
 from passlib.context import CryptContext
 from .config import settings
 
-# Support both argon2 and bcrypt for backward compatibility with existing password hashes
-pwd_context = CryptContext(schemes=["argon2", "bcrypt"], deprecated="auto")
+# Support both bcrypt and argon2 for backward compatibility with existing password hashes
+pwd_context = CryptContext(schemes=["bcrypt", "argon2"], deprecated="auto")
 
 logger = logging.getLogger(__name__)
 
