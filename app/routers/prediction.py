@@ -47,7 +47,7 @@ def get_labels():
 @router.post("")
 async def predict_pest(
     file: UploadFile = File(..., description="Image file to analyze for pest detection"),
-    confidence_threshold: float = Query(0.55, ge=0.0, le=1.0, description="55% confidence threshold. Real coconut pests score 55%+ (above 50% sigmoid baseline). Lower values may return false positives."),
+    confidence_threshold: float = Query(0.30, ge=0.0, le=1.0, description="30% confidence threshold. Lower value lets more detections through for TTA aggregation."),
     save_image: bool = Query(True, description="Save uploaded image to server"),
     tree_code: Optional[str] = Form(None, description="Tree code/identifier"),
     location_text: Optional[str] = Form(None, description="Location description"),
@@ -133,10 +133,10 @@ async def predict_pest(
     # This avoids picking a noise-floor class at 50% that might be sorted first.
     best_prediction = None
     for pred in result["predictions"]:
-        if pred["confidence"] >= 60.0:
+        if pred["confidence"] >= 50.0:
             best_prediction = pred
             break
-    # Fallback to first prediction if none meets 60% (will be marked OUT_OF_SCOPE)
+    # Fallback to first prediction if none meets 50% (will be marked OUT_OF_SCOPE)
     if best_prediction is None and result["predictions"]:
         best_prediction = result["predictions"][0]
     pest_type_id = None
@@ -161,8 +161,8 @@ async def predict_pest(
     #   ⚠️ UNCERTAIN   : confidence 45–60% → possible pest, retake recommended
     #   ❓ OUT_OF_SCOPE: confidence < 45%  → no recognizable pest / unknown image
     
-    DETECTED_THRESHOLD  = 60.0   # ≥ 60 %  → DETECTED
-    UNCERTAIN_THRESHOLD = 45.0   # 45–60 % → UNCERTAIN
+    DETECTED_THRESHOLD  = 50.0   # ≥ 50 %  → DETECTED
+    UNCERTAIN_THRESHOLD = 35.0   # 35–50 % → UNCERTAIN
     
     VALID_COCONUT_PESTS = [
         'APW Adult', 'APW Larvae', 'Brontispa', 'Brontispa Pupa',
@@ -346,7 +346,7 @@ async def predict_pest(
 @router.post("/batch")
 async def predict_batch(
     files: list[UploadFile] = File(..., description="Multiple image files to analyze"),
-    confidence_threshold: float = Query(0.55, ge=0.0, le=1.0),
+    confidence_threshold: float = Query(0.30, ge=0.0, le=1.0),
     db: Session = Depends(get_db),
     current_user: Optional[models.User] = Depends(get_optional_current_user)
 ):
@@ -359,8 +359,8 @@ async def predict_batch(
     service = get_prediction_service()
     
     # Detection thresholds (same as main endpoint)
-    DETECTED_THRESHOLD  = 60.0
-    UNCERTAIN_THRESHOLD = 45.0
+    DETECTED_THRESHOLD  = 50.0
+    UNCERTAIN_THRESHOLD = 35.0
     VALID_COCONUT_PESTS = [
         'APW Adult', 'APW Larvae', 'Brontispa', 'Brontispa Pupa',
         'Rhinoceros Beetle', 'Slug Caterpillar', 'White Grub'

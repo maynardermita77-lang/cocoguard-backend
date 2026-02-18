@@ -6,6 +6,49 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
+async def _send_email_with_fallback(message) -> bool:
+    """Send email trying port 465 SSL first, then port 587 STARTTLS as fallback.
+    Many cloud providers (Render, Railway) block port 587 but allow 465."""
+    if not settings.smtp_username or not settings.smtp_password:
+        logger.warning("SMTP credentials not configured, skipping email send")
+        return False
+
+    # Attempt 1: Port 465 with implicit SSL (preferred for cloud hosting)
+    try:
+        logger.info(f"Attempting SMTP via port 465 (SSL)...")
+        await aiosmtplib.send(
+            message,
+            hostname=settings.smtp_host,
+            port=465,
+            use_tls=True,
+            username=settings.smtp_username,
+            password=settings.smtp_password,
+            timeout=30,
+        )
+        logger.info("Email sent successfully via port 465 (SSL)")
+        return True
+    except Exception as e1:
+        logger.warning(f"Port 465 SSL failed: {e1}")
+
+    # Attempt 2: Port 587 with STARTTLS (original approach)
+    try:
+        logger.info(f"Attempting SMTP via port 587 (STARTTLS)...")
+        await aiosmtplib.send(
+            message,
+            hostname=settings.smtp_host,
+            port=587,
+            start_tls=True,
+            username=settings.smtp_username,
+            password=settings.smtp_password,
+            timeout=30,
+        )
+        logger.info("Email sent successfully via port 587 (STARTTLS)")
+        return True
+    except Exception as e2:
+        logger.error(f"Port 587 STARTTLS also failed: {e2}")
+        raise e2
+
 async def send_verification_email(to_email: str, code: str, subject: str = None, template_type: str = "verification") -> bool:
     """Send verification code via email
     
@@ -110,19 +153,8 @@ async def send_verification_email(to_email: str, code: str, subject: str = None,
         # Attach HTML content
         message.attach(MIMEText(html, "html"))
 
-        # Send email
-        if not settings.smtp_username or not settings.smtp_password:
-            logger.warning("SMTP credentials not configured, skipping email send")
-            return False
-
-        await aiosmtplib.send(
-            message,
-            hostname=settings.smtp_host,
-            port=settings.smtp_port,
-            start_tls=True,
-            username=settings.smtp_username,
-            password=settings.smtp_password,
-        )
+        # Send email with SSL/STARTTLS fallback
+        await _send_email_with_fallback(message)
 
         logger.info(f"Verification email sent to {to_email}")
         return True
@@ -219,21 +251,8 @@ CocoGuard - Coconut Pest Detection System
         message.attach(MIMEText(plain_text, "plain"))
         message.attach(MIMEText(html, "html"))
 
-        # Send email
-        if not settings.smtp_username or not settings.smtp_password:
-            logger.warning("SMTP credentials not configured, skipping email send")
-            # For development: return True with logged code
-            logger.info(f"[DEV MODE] Password reset code for {to_email}: {code}")
-            return True
-
-        await aiosmtplib.send(
-            message,
-            hostname=settings.smtp_host,
-            port=settings.smtp_port,
-            start_tls=True,
-            username=settings.smtp_username,
-            password=settings.smtp_password,
-        )
+        # Send email with SSL/STARTTLS fallback
+        await _send_email_with_fallback(message)
 
         logger.info(f"Password reset email sent to {to_email}")
         return True

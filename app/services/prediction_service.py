@@ -290,7 +290,7 @@ class PestPredictionService:
 
         # Minimum average confidence to keep a class in TTA results.
         # 50% is pure sigmoid baseline noise; require at least 55% to be meaningful.
-        TTA_MIN_CONFIDENCE = 55.0
+        TTA_MIN_CONFIDENCE = 45.0
 
         for pest_type, detections in class_detections.items():
             agreement = len(detections)
@@ -366,7 +366,7 @@ class PestPredictionService:
     # ================================================================
     #  MAIN PREDICT  (with TTA + quality check)
     # ================================================================
-    def predict(self, image: Image.Image, confidence_threshold: float = 0.5) -> Dict:
+    def predict(self, image: Image.Image, confidence_threshold: float = 0.3) -> Dict:
         """
         Run prediction with Test-Time Augmentation (TTA), multi-scale
         inference, and image-quality pre-checks.
@@ -455,11 +455,11 @@ class PestPredictionService:
         ]
         NUM_CLASSES = 7
         TOP_K = 3  # Reduced from 5 → 3: fewer weak anchors in average = +3-5% confidence
-        MIN_ANCHOR_COUNT = 3  # Minimum anchors per class to be considered real
-        MAX_SIMULTANEOUS_CLASSES = 3  # Max classes that can fire at once
-        MAX_CLASS_SPREAD_RATIO = 0.85  # Max ratio between top two class confidences
+        MIN_ANCHOR_COUNT = 2  # Minimum anchors per class to be considered real
+        MAX_SIMULTANEOUS_CLASSES = 4  # Max classes that can fire at once
+        MAX_CLASS_SPREAD_RATIO = 0.92  # Max ratio between top two class confidences
         NMS_IOU_THRESHOLD = 0.5  # NMS: suppress overlapping boxes with IoU > this
-        MIN_AVG_MARGIN = 0.09  # Minimum avg margin between best and 2nd-best class
+        MIN_AVG_MARGIN = 0.04  # Minimum avg margin between best and 2nd-best class
         
         try:
             # Remove batch dimension: [1, 43, 8400] -> [43, 8400]
@@ -607,7 +607,7 @@ class PestPredictionService:
             # sees something it doesn't recognize (teddy bears, food, fabric).
             # If the final detection matches this noise-dominant class, require
             # higher confidence to trust it as a real pest.
-            NOISE_CLASS_MIN_CONFIDENCE_PCT = 68.0
+            NOISE_CLASS_MIN_CONFIDENCE_PCT = 55.0
             
             all_class_counts = np.bincount(max_class_ids.astype(int), minlength=NUM_CLASSES)
             noise_dominant_class = int(np.argmax(all_class_counts))
@@ -622,7 +622,7 @@ class PestPredictionService:
             # IMPORTANT: Only count classes with meaningful confidence (top-k avg > 55%).
             # At the sigmoid noise floor (50%), every class has detections — counting
             # those would cause ALL images to fail this check.
-            MEANINGFUL_CONFIDENCE = 0.55  # Must be above 50% noise floor
+            MEANINGFUL_CONFIDENCE = 0.45  # Must be above 50% noise floor
             meaningful_classes = sum(
                 1 for cid, (avg_c, _, cnt) in pest_results.items()
                 if avg_c >= MEANINGFUL_CONFIDENCE and cnt >= MIN_ANCHOR_COUNT
@@ -765,7 +765,7 @@ class PestPredictionService:
             traceback.print_exc()
             return []
     
-    def predict_from_bytes(self, image_bytes: bytes, confidence_threshold: float = 0.5) -> Dict:
+    def predict_from_bytes(self, image_bytes: bytes, confidence_threshold: float = 0.3) -> Dict:
         """Run prediction from image bytes"""
         try:
             image = Image.open(io.BytesIO(image_bytes))
@@ -777,7 +777,7 @@ class PestPredictionService:
                 "predictions": []
             }
     
-    def predict_from_path(self, image_path: str, confidence_threshold: float = 0.5) -> Dict:
+    def predict_from_path(self, image_path: str, confidence_threshold: float = 0.3) -> Dict:
         """Run prediction from image file path"""
         try:
             image = Image.open(image_path)
